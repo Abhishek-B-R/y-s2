@@ -94,11 +94,15 @@ export function mergeMessages(messages: Uint8Array[]): Uint8Array[] {
 		);
 	}
 
-	if (aw.states.size > 0) {
+	// Every client the input mentioned has a meta entry, including one whose
+	// update was a disconnect (null state), which aw.getStates() no longer has.
+	// Skip this scratch instance's own local client, which is not in the input.
+	const awarenessClients = array.from(aw.meta.keys()).filter((clientID) => clientID !== aw.clientID);
+	if (awarenessClients.length > 0) {
 		result.push(
 			encoding.encode((encoder) => {
 				encoding.writeVarUint(encoder, messageAwareness);
-				encoding.writeVarUint8Array(encoder, awarenessProtocol.encodeAwarenessUpdate(aw, array.from(aw.getStates().keys())));
+				encoding.writeVarUint8Array(encoder, awarenessProtocol.encodeAwarenessUpdate(aw, awarenessClients));
 			}),
 		);
 	}
